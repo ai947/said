@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تأكيد الطلب - ZININO</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+        }
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .product-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+        /* إضافة خلفية لعلبة المعلومات */
+        .info-box {
+            background-color: #f0f8ff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h3 class="text-center mb-4">إدخال بيانات الدفع</h3>
+        <div class="info-box">
+            <form id="checkout-form" onsubmit="return sendOrderToWhatsApp()">
+                <div class="form-group">
+                    <label for="name">الاسم الكامل</label>
+                    <input type="text" class="form-control" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="city">المدينة</label>
+                    <input type="text" class="form-control" id="city" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">رقم الهاتف</label>
+                    <input type="tel" class="form-control" id="phone" required>
+                </div>
+
+                <h5>مكونات السلة:</h5>
+                <div id="cart-summary">
+                    <!-- سيتم عرض مكونات السلة هنا -->
+                </div>
+                <h5 class="mt-3">المجموع: <span id="total-price">0$</span></h5>
+
+                <button type="submit" class="btn btn-primary btn-block">إتمام الدفع عبر WhatsApp</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // استرجاع السلة من localStorage
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let total = 0;
+
+        // عرض مكونات السلة
+        function renderCartSummary() {
+            const cartSummaryContainer = document.getElementById('cart-summary');
+            cartSummaryContainer.innerHTML = '';  // إعادة تعيين الحاوية
+
+            total = 0;  // Reset total
+
+            cart.forEach((item) => {
+                cartSummaryContainer.innerHTML += `
+                    <div class="product-item">
+                        <img src="${item.image}" alt="${item.name}">
+                        <span>${item.name}</span>
+                        <span>${item.quantity} x ${item.price}$</span>
+                    </div>
+                `;
+                total += item.price * item.quantity;
+            });
+
+            document.getElementById('total-price').innerText = total + '$';
+        }
+
+        // إرسال الطلب عبر WhatsApp
+        function sendOrderToWhatsApp() {
+            const name = document.getElementById('name').value;
+            const city = document.getElementById('city').value;
+            const phone = document.getElementById('phone').value;
+
+            // التأكد من إدخال جميع المعلومات المطلوبة
+            if (name === '' || city === '' || phone === '') {
+                alert("الرجاء إدخال جميع المعلومات المطلوبة");
+                return false;
+            }
+
+            let cartMessage = cart.map(item => `${item.name} (${item.quantity} x ${item.price}$)`).join('%0A');
+            let totalMessage = `المجموع: ${total}$`;
+
+            let message = `الاسم: ${name}%0Aالمدينة: ${city}%0Aالهاتف: ${phone}%0Aالمنتجات المطلوبة:%0A${cartMessage}%0A${totalMessage}`;
+            let whatsappUrl = `https://wa.me/+212774032863?text=${message}`;  // استبدل بالرقم الصحيح
+
+            // فتح WhatsApp في نافذة جديدة
+            window.open(whatsappUrl, '_blank');
+
+            // إزالة السلة من localStorage
+            localStorage.removeItem('cart');
+            cart = [];
+
+            // إعادة توجيه المستخدم أو إعادة تحميل الصفحة
+            setTimeout(() => {
+                alert('تم إرسال الطلب بنجاح!');
+                window.location.href = 'index.html';
+            }, 1000);  // تأخير بسيط للسماح بفتح WhatsApp
+
+            return false;  // منع إرسال النموذج فعليًا
+        }
+
+        // استدعاء عرض السلة عند تحميل الصفحة
+        renderCartSummary();
+    </script>
+</body>
+
+</html>
